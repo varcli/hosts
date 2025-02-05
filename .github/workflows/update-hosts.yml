@@ -200,6 +200,7 @@ jobs:
               dnsList.append('# Update at: {}'.format(time.strftime("%Y-%m-%d %H:%M:%S")))
 
               # GitHub
+              dnsList.append('')
               dnsList.append('# GitHub Hosts Start')
               for domain in gitHubDoMains:
                   ret, ips = dnsobj.check(domain, 'A')
@@ -210,6 +211,7 @@ jobs:
               dnsList.append('# GitHub Hosts End')
               
               # Docker
+              dnsList.append('')
               dnsList.append('# Docker Hosts Start')
               for domain in dockerDoMains:
                   ret, ips = dnsobj.check(domain, 'A')
@@ -218,7 +220,8 @@ jobs:
                           dnsList.append((ip.ljust(16) + domain))
                           break  # 只取第一个吧
               dnsList.append('# Docker Hosts End')
-              
+
+              dnsList.append('')
               dnsList.append('# Varcli Hosts End')
               
               with open('hosts', 'w', encoding="utf-8") as f:
