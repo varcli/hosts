@@ -18,5 +18,5 @@ Linux:
 # 删除
 sudo sed -i '/# Varcli Hosts Start/,/# Varcli Hosts End/d' /etc/hosts
 # 添加
-curl -s -L https://raw.githubusercontent.com/shidahuilang/hosts/main/hosts | sudo tee -a /etc/hosts
+curl -s -L https://raw.githubusercontent.com/varcli/hosts/main/hosts | sudo tee -a /etc/hosts
 ```
