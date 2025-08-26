@@ -2,49 +2,49 @@
 # Raw Url: https://raw.githubusercontent.com/varcli/hosts/main/hosts
 # CDN Url: https://cdn.staticaly.com/gh/varcli/hosts/main/hosts
 # DNS Servers: Aliyun Computing Co. Ltd
-# Update at: 2025-08-26 10:45:35
+# Update at: 2025-08-26 17:31:28
 
 # GitHub Hosts Start
-185.199.109.154 github.githubassets.com
-140.82.114.21   central.github.com
+185.199.110.154 github.githubassets.com
+140.82.112.22   central.github.com
 185.199.108.133 desktop.githubusercontent.com
 185.199.108.133 camo.githubusercontent.com
-185.199.109.133 github.map.fastly.net
+185.199.111.133 github.map.fastly.net
 151.101.41.194  github.global.ssl.fastly.net
 140.82.114.4    gist.github.com
-185.199.110.153 github.io
+185.199.109.153 github.io
 140.82.114.4    github.com
-140.82.113.5    api.github.com
-185.199.108.133 raw.githubusercontent.com
-185.199.110.133 user-images.githubusercontent.com
-185.199.111.133 favicons.githubusercontent.com
-185.199.110.133 avatars5.githubusercontent.com
-185.199.109.133 avatars4.githubusercontent.com
+140.82.114.6    api.github.com
+185.199.110.133 raw.githubusercontent.com
+185.199.109.133 user-images.githubusercontent.com
+185.199.110.133 favicons.githubusercontent.com
+185.199.109.133 avatars5.githubusercontent.com
+185.199.110.133 avatars4.githubusercontent.com
 185.199.109.133 avatars3.githubusercontent.com
-185.199.109.133 avatars2.githubusercontent.com
-185.199.109.133 avatars1.githubusercontent.com
+185.199.111.133 avatars2.githubusercontent.com
+185.199.108.133 avatars1.githubusercontent.com
 185.199.111.133 avatars0.githubusercontent.com
-185.199.110.133 avatars.githubusercontent.com
-140.82.113.10   codeload.github.com
-54.231.192.89   github-cloud.s3.amazonaws.com
-16.15.178.107   github-com.s3.amazonaws.com
-16.15.184.98    github-production-release-asset-2e65be.s3.amazonaws.com
-16.15.178.107   github-production-user-asset-6210df.s3.amazonaws.com
-16.15.186.121   github-production-repository-file-5c1aeb.s3.amazonaws.com
+185.199.111.133 avatars.githubusercontent.com
+140.82.112.9    codeload.github.com
+16.182.98.129   github-cloud.s3.amazonaws.com
+3.5.27.160      github-com.s3.amazonaws.com
+3.5.29.90       github-production-release-asset-2e65be.s3.amazonaws.com
+52.217.168.1    github-production-user-asset-6210df.s3.amazonaws.com
+3.5.31.192      github-production-repository-file-5c1aeb.s3.amazonaws.com
 185.199.109.153 githubstatus.com
-140.82.113.17   github.community
-185.199.110.133 media.githubusercontent.com
-185.199.109.133 objects.githubusercontent.com
-185.199.108.133 raw.github.com
+140.82.112.18   github.community
+185.199.111.133 media.githubusercontent.com
+185.199.110.133 objects.githubusercontent.com
+185.199.109.133 raw.github.com
 4.249.131.160   copilot-proxy.githubusercontent.com
 # GitHub Hosts End
 
 # Docker Hosts Start
-34.225.140.1    hub.docker.com
-140.82.114.33   ghcr.io
+44.207.58.142   hub.docker.com
+140.82.113.34   ghcr.io
 142.251.111.82  gcr.io
 172.253.122.82  k8s.gcr.io
-54.205.61.35    quay.io
+35.174.37.87    quay.io
 # Docker Hosts End
 
 # Varcli Hosts End
