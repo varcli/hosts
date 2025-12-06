@@ -3,21 +3,8 @@ name: update-hosts
 on: 
   schedule:
     - cron: "10 1/8 * * *"
-     
+  # 保留 workflow_dispatch 以便你可以手动点击按钮运行，但不需要任何参数了
   workflow_dispatch:
-    inputs:
-      dns:
-        description: 'DNS'
-        required: true
-        default: 'Aliyun'
-        type: choice
-        options:
-        - 'Google'
-        - 'OpenDNS'
-        - 'AT&T'
-        - 'Aliyun'
-        - 'LG'
-        - 'IONICA'
 
 jobs:
   hosts:
@@ -36,110 +23,41 @@ jobs:
           git config --global user.name "github-actions[bot]"
           sudo timedatectl set-timezone "Asia/Shanghai"
           python -m pip install --upgrade pip setuptools
-          python -m pip install urllib3
+          python -m pip install requests
           
       - name: Get Github Hosts
         shell: python
         run: |
-          import os, time, json, urllib3
+          import os
+          import time
+          import requests
+          import re
 
-          class dnsChecker():
-              def __init__(self) -> None:
-                  self.dnsServers = {
-                      "Google": {
-                          "idx": "4",
-                          "provider": " Google",
-                          "location": "Mountain View CA, United States",
-                          "country": "us"
-                      },
-                      "OpenDNS": {
-                          "idx": "1",
-                          "provider": " OpenDNS",
-                          "location": "Holtsville NY, United States",
-                          "country": "us"
-                      },
-                      "AT&T": {
-                          "idx": "72",
-                          "provider": "AT&T Services",
-                          "location": "Miami, United States",
-                          "country": "us"
-                      },
-                      "Aliyun": {
-                          "idx": "364",
-                          "provider": "Aliyun Computing Co. Ltd",
-                          "location": "Hangzhou, China",
-                          "country": "cn"
-                      },
-                      "LG": {
-                          "idx": "336",
-                          "provider": "LG Dacom Corporation",
-                          "location": "Seoul, South Korea",
-                          "country": "kr"
-                      },
-                      "IONICA": {
-                          "idx": "13",
-                          "provider": "IONICA LLC",
-                          "location": "Ramenskoye, Russia",
-                          "country": "ru"
-                      }
-                  }
-                  self.dnsidx = self.dnsServers['Aliyun']['idx']
-                  self.headers = {
-                      'accept': 'application/json, text/javascript, */*; q=0.01',
-                      'content-type': 'application/x-www-form-urlencoded; charset=UTF-8', 
-                      'x-requested-with': 'XMLHttpRequest',
-                      'origin': 'https://dnschecker.org',
-                      'referer': 'https://dnschecker.org/',
-                      'x-requested-with': 'XMLHttpRequest', 
-                  }
-                  self.PM = urllib3.PoolManager()
-
-                  url = 'https://dnschecker.org/ajax_files/gen_csrf.php'
-                  res = self.PM.request('POST', url, headers=self.headers)
-                  if res.status == 200:
-                      data = None
-                      data = json.loads(res.data.decode('utf-8'))
-                      if data != None and 'csrf' in data:
-                          self.headers['csrftoken'] = data['csrf']
-
-              def setServers(self, servers=''):
-                  if servers in self.dnsServers:
-                      self.dnsidx = self.dnsServers[servers]['idx']
-
-              def getServers(self, servers=''):
-                  if servers == '': 
-                      for i in self.dnsServers:
-                          if self.dnsServers[i]['idx'] == self.dnsidx:
-                              servers = i
-                  if servers in self.dnsServers:
-                      return self.dnsServers[servers]
-                  else:
-                      return None
-                      
-
-              def check(self, qname='', rdtype='A', servers=''):
-                  if servers == '': 
-                      servers = self.dnsidx
-                  ret = False
-                  ips = []
-                  try:
-                      url = 'https://dnschecker.org/ajax_files/api/{}/{}/{}?upd=500.000'.format(servers, rdtype, qname)
-                      res = self.PM.request('POST', url, headers=self.headers)
-
-                      if res.status == 200:
-                          data = None
-                          data = json.loads(res.data.decode('utf-8'))
-                          if data != None and 'result' in data and 'ips' in data['result']:
-                              ret = True
-                              ips = data['result']['ips'].split('<br />')
-                          else:
-                              print(res.data.decode('utf-8'))
-                      else:
-                          print(res.data.decode('utf-8'))
-                  except Exception as err:
-                      print(err)
-                  return ret, ips
-
+          def get_ip(domain):
+              """
+              从 ipaddress.com 获取域名的最佳 IP
+              """
+              url = f"https://{domain}.ipaddress.com/"
+              headers = {
+                  'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                  'Referer': 'https://www.google.com/'
+              }
+              
+              try:
+                  response = requests.get(url, headers=headers, timeout=15)
+                  response.raise_for_status()
+                  
+                  # 使用正则匹配页面中的 IPv4 地址
+                  # 排除 127.x, 10.x, 192.168.x 等私有地址
+                  ips = re.findall(r'\b(?:[0-9]{1,3}\.){3}[0-9]{1,3}\b', response.text)
+                  
+                  for ip in ips:
+                      if not ip.startswith("127.") and not ip.startswith("10.") and not ip.startswith("192.168."):
+                          return ip
+              except Exception as e:
+                  print(f"Error fetching {domain}: {e}")
+              
+              return None
 
           if __name__ == '__main__':
               gitHubDoMains = [
@@ -192,41 +110,38 @@ jobs:
                   "k8s.gcr.io",
                   "quay.io"
               ]
-              
-              dnsobj = dnsChecker()
-
-              dnsservers = 'Aliyun'
-              if '${{ inputs.dns }}' != '':
-                  dnsservers = '${{ inputs.dns }}'
-              dnsobj.setServers(dnsservers)
 
               dnsList = []
               dnsList.append('# Varcli Hosts Start')
               dnsList.append('# Raw Url: https://raw.githubusercontent.com/varcli/hosts/main/hosts')
               dnsList.append('# CDN Url: https://cdn.staticaly.com/gh/varcli/hosts/main/hosts')
-              dnsList.append('# DNS Servers: {}'.format(dnsobj.getServers()['provider']))
+              dnsList.append('# Source: ipaddress.com (Best Global IPs)')
               dnsList.append('# Update at: {}'.format(time.strftime("%Y-%m-%d %H:%M:%S")))
 
               # GitHub
+              print("Updating GitHub Hosts...")
               dnsList.append('')
               dnsList.append('# GitHub Hosts Start')
               for domain in gitHubDoMains:
-                  ret, ips = dnsobj.check(domain, 'A')
-                  if ret == True:
-                      for ip in ips:
-                          dnsList.append((ip.ljust(16) + domain))
-                          break  # 只取第一个吧
+                  ip = get_ip(domain)
+                  if ip:
+                      print(f"Resolved {domain} -> {ip}")
+                      dnsList.append((ip.ljust(16) + domain))
+                  else:
+                      print(f"Failed to resolve {domain}")
               dnsList.append('# GitHub Hosts End')
               
               # Docker
+              print("Updating Docker Hosts...")
               dnsList.append('')
               dnsList.append('# Docker Hosts Start')
               for domain in dockerDoMains:
-                  ret, ips = dnsobj.check(domain, 'A')
-                  if ret == True:
-                      for ip in ips:
-                          dnsList.append((ip.ljust(16) + domain))
-                          break  # 只取第一个吧
+                  ip = get_ip(domain)
+                  if ip:
+                      print(f"Resolved {domain} -> {ip}")
+                      dnsList.append((ip.ljust(16) + domain))
+                  else:
+                      print(f"Failed to resolve {domain}")
               dnsList.append('# Docker Hosts End')
 
               dnsList.append('')
