@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
     inputs:
       client_ip:
-        description: '伪装客户端 IP (用于解析国内加速节点)'
+        description: '伪装客户端 IP (推荐: 上海电信 116.228.111.118 / 北京联通 123.125.114.144)'
         required: true
         default: '221.5.203.98' # 重庆联通
         type: string
@@ -96,12 +96,18 @@ jobs:
               
               dockerDoMains = ["hub.docker.com", "ghcr.io", "gcr.io", "k8s.gcr.io", "quay.io"]
 
+              otherDoMains = [
+                  "dl.google.com", "dl-ssl.google.com", "ajax.googleapis.com", "fonts.googleapis.com", 
+                  "fonts.gstatic.com", "translate.googleapis.com","cdnjs.cloudflare.com", "cdn.jsdelivr.net", 
+                  "unpkg.com", "pypi.org", "files.pythonhosted.org", "gravatar.com", "secure.gravatar.com"
+                ]
+
               dnsList = []
               dnsList.append('# Varcli Hosts Start')
               dnsList.append(f'# Update at: {time.strftime("%Y-%m-%d %H:%M:%S")}')
               dnsList.append(f'# Strategy: Google DoH with ECS ({ecs_ip})')
 
-              for label, domains in [("GitHub", gitHubDoMains), ("Docker", dockerDoMains)]:
+              for label, domains in [("GitHub", gitHubDoMains), ("Docker", dockerDoMains), ("Other", otherDoMains)]:
                   dnsList.append(f'\n# {label} Hosts')
                   for domain in domains:
                       try:
