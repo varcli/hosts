@@ -22,7 +22,8 @@ jobs:
           git config --global user.name "github-actions[bot]"
           sudo timedatectl set-timezone "Asia/Shanghai"
           python -m pip install --upgrade pip
-          python -m pip install requests requests-html retry
+          # 核心修正：除了 requests-html，还必须安装 lxml_html_clean
+          python -m pip install requests requests-html retry lxml_html_clean
           
       - name: Get Github Hosts
         shell: python
@@ -34,53 +35,49 @@ jobs:
           from requests_html import HTMLSession
           from typing import Any, Optional
 
-          # 1. 还原 get_best_ip：原项目其实是取列表第一个有效值
+          # 补全辅助函数
           def get_best_ip(ip_list: list) -> Optional[str]:
               if not ip_list:
                   return None
               for ip in ip_list:
-                  if ip.startswith("127.") or ip.startswith("0."):
+                  # 过滤掉本地回环和无效地址
+                  if ip.startswith("127.") or ip.startswith("0.") or ip.endswith(".0"):
                       continue
                   return ip
               return None
 
-          # 2. 深度还原原项目的 get_ip 逻辑
           @retry(tries=3, delay=2)
           def get_ip(session: Any, github_url: str) -> Optional[str]:
-              # 关键点：原项目对于不同的域名后缀，URL 构造逻辑其实有细微差别
-              # 这里采用它最核心的解析地址
               url = f'https://sites.ipaddress.com/{github_url}'
               headers = {
-                  'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/106.0.0.0 Safari/537.36'
+                  'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
               }
               try:
                   rs = session.get(url, headers=headers, timeout=10)
-                  # 核心区别：原项目使用 requests-html 的 .html.text
-                  # 这样可以获取到 JS 渲染后或者隐藏在标签里的文本
+                  # 匹配 A 记录 IP
                   pattern = r"\b(?:[0-9]{1,3}\.){3}[0-9]{1,3}\b"
                   
-                  # 爬取逻辑：先找页面上所有的 IP
-                  # 原项目在特定情况下会去解析 table 里的内容
+                  # 逻辑 1：从 sites 页面提取
                   ip_list = re.findall(pattern, rs.html.text)
-                  
                   best_ip = get_best_ip(ip_list)
+                  
+                  if not best_ip:
+                      # 逻辑 2：备选方案，直接访问 ipaddress.com/domain
+                      alt_url = f'https://{github_url}.ipaddress.com'
+                      rs_alt = session.get(alt_url, headers=headers, timeout=10)
+                      ip_list = re.findall(pattern, rs_alt.html.text)
+                      best_ip = get_best_ip(ip_list)
+                      
                   if best_ip:
                       return best_ip
                   else:
-                      # 如果 sites 没找到，尝试二级跳转逻辑 (GitHub520 备选方案)
-                      alt_url = f'https://{github_url}.ipaddress.com'
-                      rs_alt = session.get(alt_url, headers=headers, timeout=10)
-                      ip_list_alt = re.findall(pattern, rs_alt.html.text)
-                      best_ip_alt = get_best_ip(ip_list_alt)
-                      if best_ip_alt:
-                          return best_ip_alt
-                      raise Exception(f"url: {github_url}, ipaddress empty")
+                      raise Exception(f"No IP found for {github_url}")
+                      
               except Exception as ex:
-                  print(f"Error resolving {github_url}: {ex}")
+                  print(f"Resolving {github_url} failed: {ex}")
                   raise ex
 
           if __name__ == '__main__':
-              # 使用原项目推荐的 HTMLSession
               session = HTMLSession()
               
               gitHubDoMains = [
@@ -107,7 +104,7 @@ jobs:
               dockerDoMains = ["hub.docker.com", "ghcr.io", "gcr.io", "k8s.gcr.io", "quay.io"]
 
               dnsList = []
-              dnsList.append('# GitHub520 Hosts Start')
+              dnsList.append('# Varcli Hosts Start')
               dnsList.append(f'# Update at: {time.strftime("%Y-%m-%d %H:%M:%S")}')
 
               for label, domains in [("GitHub", gitHubDoMains), ("Docker", dockerDoMains)]:
@@ -116,13 +113,14 @@ jobs:
                       try:
                           ip = get_ip(session, domain)
                           if ip:
-                              print(f"Resolved {domain} -> {ip}")
-                              dnsList.append(f"{ip.ljust(16)} {domain}")
-                          time.sleep(1.5)
+                              print(f"Success: {domain} -> {ip}")
+                              dnsList.append(f"{ip.ljust(20)} {domain}")
+                          # 增加延时防止触发 Web 屏蔽
+                          time.sleep(1.2)
                       except:
-                          print(f"Failed to resolve {domain}")
+                          print(f"Final Failure: {domain}")
 
-              dnsList.append('\n# GitHub520 Hosts End')
+              dnsList.append('\n# Varcli Hosts End')
               
               with open('hosts', 'w', encoding="utf-8") as f:
                   f.write('\n'.join(dnsList))
@@ -134,3 +132,14 @@ jobs:
             git commit -m "update $(date +%Y-%m-%d" "%H:%M:%S)"
             git push -f
           fi
+    
+  del_runs:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 删除 workflow runs
+        uses: JuvenileQ/delete-workflow-runs@main
+        with:
+          token: ${{ github.token }}
+          repository: ${{ github.repository }}
+          retain_days: 0
+          keep_minimum_runs: 3
