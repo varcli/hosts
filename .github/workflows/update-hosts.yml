@@ -2,7 +2,7 @@ name: update-hosts
 
 on: 
   schedule:
-    - cron: "10 1/3 * * *"
+    - cron: "10 6,10,13,15,18,21,1 * * *"
   workflow_dispatch:
 
 jobs:
@@ -21,8 +21,8 @@ jobs:
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
           git config --global user.name "github-actions[bot]"
           sudo timedatectl set-timezone "Asia/Shanghai"
-          python -m pip install --upgrade pip setuptools
-          python -m pip install requests beautifulsoup4
+          python -m pip install --upgrade pip
+          python -m pip install requests retry
           
       - name: Get Github Hosts
         shell: python
@@ -30,145 +30,83 @@ jobs:
           import os
           import time
           import requests
-          from bs4 import BeautifulSoup
           import re
+          from retry import retry
+          from typing import Any, Optional
 
-          # 创建一个全局 session 以复用 TCP 连接，提高爬取速度
-          session = requests.Session()
-          # 必须模拟浏览器 Header，否则 ipaddress.com 会拦截
-          session.headers.update({
-              'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36'
-          })
-
-          def get_ip(domain):
-              url = f"https://sites.ipaddress.com/{domain}"
-              
-              try:
-                  # 请求页面，设置超时
-                  response = session.get(url, timeout=10)
-                  response.raise_for_status()
-                  
-                  # 使用 BeautifulSoup 解析页面
-                  soup = BeautifulSoup(response.text, 'html.parser')
-                  
-                  # 逻辑：寻找包含 IP 地址的链接或列表
-                  # ipaddress.com 的结构通常在 id="tab-1" 或特定的面板中
-                  # 这里使用正则在 soup 文本中寻找第一个合法的公网 IPv4
-                  
-                  # 获取页面上的所有文本
-                  text = soup.get_text()
-                  
-                  # 匹配 IPv4 的正则 (排除 127.0.0.1 等本地 IP)
-                  pattern = r'\b(?:[0-9]{1,3}\.){3}[0-9]{1,3}\b'
-                  ips = re.findall(pattern, text)
-                  
-                  for ip in ips:
-                      # 简单的过滤器：跳过本地 IP 和可能的版本号误判
-                      if ip.startswith("127.") or ip.startswith("0."):
-                          continue
-                      
-                      # 返回找到的第一个看起来像合法 IP 的地址
-                      # sites.ipaddress.com 通常把最佳 A 记录放在最前面
-                      return ip
-                      
-              except Exception as e:
-                  print(f"Error resolving {domain}: {e}")
-              
+          def get_best_ip(ip_list: list) -> Optional[str]:
+              for ip in ip_list:
+                  if ip.startswith("127.") or ip.startswith("0."):
+                      continue
+                  return ip
               return None
+
+          @retry(tries=3, delay=1)
+          def get_ip(session: Any, github_url: str) -> Optional[str]:
+              url = f'https://sites.ipaddress.com/{github_url}'
+              headers = {
+                  'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)'
+                                ' AppleWebKit/537.36 (KHTML, like Gecko) Chrome/1'
+                                '06.0.0.0 Safari/537.36'}
+              try:
+                  rs = session.get(url, headers=headers, timeout=5)
+                  pattern = r"\b(?:[0-9]{1,3}\.){3}[0-9]{1,3}\b"
+                  ip_list = re.findall(pattern, rs.text)
+                  best_ip = get_best_ip(ip_list)
+                  if best_ip:
+                      return best_ip
+                  else:
+                      raise Exception(f"url: {github_url}, ipaddress empty")
+              except Exception as ex:
+                  print(f"get: {url}, error: {ex}")
+                  raise Exception
 
           if __name__ == '__main__':
               gitHubDoMains = [
-                  "alive.github.com", 
-                  "api.github.com", 
-                  "api.individual.githubcopilot.com",
-                  "avatars.githubusercontent.com", 
-                  "avatars0.githubusercontent.com",
-                  "avatars1.githubusercontent.com", 
-                  "avatars2.githubusercontent.com",
-                  "avatars3.githubusercontent.com", 
-                  "avatars4.githubusercontent.com",
-                  "avatars5.githubusercontent.com", 
-                  "camo.githubusercontent.com",
-                  "central.github.com", 
-                  "cloud.githubusercontent.com", 
-                  "codeload.github.com",
-                  "collector.github.com", 
-                  "desktop.githubusercontent.com",
-                  "favicons.githubusercontent.com", 
-                  "gist.github.com",
-                  "github-cloud.s3.amazonaws.com", 
-                  "github-com.s3.amazonaws.com",
+                  "alive.github.com", "api.github.com", "api.individual.githubcopilot.com",
+                  "avatars.githubusercontent.com", "avatars0.githubusercontent.com",
+                  "avatars1.githubusercontent.com", "avatars2.githubusercontent.com",
+                  "avatars3.githubusercontent.com", "avatars4.githubusercontent.com",
+                  "avatars5.githubusercontent.com", "camo.githubusercontent.com",
+                  "central.github.com", "cloud.githubusercontent.com", "codeload.github.com",
+                  "collector.github.com", "desktop.githubusercontent.com",
+                  "favicons.githubusercontent.com", "gist.github.com",
+                  "github-cloud.s3.amazonaws.com", "github-com.s3.amazonaws.com",
                   "github-production-release-asset-2e65be.s3.amazonaws.com",
                   "github-production-repository-file-5c1aeb.s3.amazonaws.com",
-                  "github-production-user-asset-6210df.s3.amazonaws.com", 
-                  "github.blog",
-                  "github.com", 
-                  "github.community", 
-                  "github.githubassets.com",
-                  "github.global.ssl.fastly.net", 
-                  "github.io",
-                  "github.map.fastly.net",
-                  "githubstatus.com", 
-                  "live.github.com", 
-                  "media.githubusercontent.com",
-                  "objects.githubusercontent.com", 
-                  "pipelines.actions.githubusercontent.com",
-                  "raw.githubusercontent.com", 
-                  "user-images.githubusercontent.com",
-                  "vscode.dev", 
-                  "education.github.com", 
-                  "private-user-images.githubusercontent.com"
+                  "github-production-user-asset-6210df.s3.amazonaws.com", "github.blog",
+                  "github.com", "github.community", "github.githubassets.com",
+                  "github.global.ssl.fastly.net", "github.io", "github.map.fastly.net",
+                  "githubstatus.com", "live.github.com", "media.githubusercontent.com",
+                  "objects.githubusercontent.com", "pipelines.actions.githubusercontent.com",
+                  "raw.githubusercontent.com", "user-images.githubusercontent.com",
+                  "vscode.dev", "education.github.com", "private-user-images.githubusercontent.com"
               ]
               
-              dockerDoMains = [
-                  "hub.docker.com",
-                  "ghcr.io",
-                  "gcr.io",
-                  "k8s.gcr.io",
-                  "quay.io"
-              ]
+              dockerDoMains = ["hub.docker.com", "ghcr.io", "gcr.io", "k8s.gcr.io", "quay.io"]
 
+              session = requests.Session()
               dnsList = []
               dnsList.append('# Varcli Hosts Start')
-              dnsList.append('# Raw Url: https://raw.githubusercontent.com/varcli/hosts/main/hosts  ')
-              dnsList.append('# CDN Url: https://cdn.staticaly.com/gh/varcli/hosts/main/hosts  ')
-              dnsList.append('# Source: ipaddress.com')
-              dnsList.append('# Update at: {}'.format(time.strftime("%Y-%m-%d %H:%M:%S")))
+              dnsList.append(f'# Update at: {time.strftime("%Y-%m-%d %H:%M:%S")}')
 
-              # GitHub
-              print("Updating GitHub Hosts...")
-              dnsList.append('')
-              dnsList.append('# GitHub Hosts Start')
-              for domain in gitHubDoMains:
-                  ip = get_ip(domain)
-                  if ip:
-                      print(f"Resolved {domain} -> {ip}")
-                      dnsList.append((ip.ljust(16) + domain))
-                      # 稍微停顿一下，避免触发反爬虫
-                      time.sleep(0.5)
-                  else:
-                      print(f"Failed to resolve {domain}")
-              dnsList.append('# GitHub Hosts End')
-              
-              # Docker
-              print("Updating Docker Hosts...")
-              dnsList.append('')
-              dnsList.append('# Docker Hosts Start')
-              for domain in dockerDoMains:
-                  ip = get_ip(domain)
-                  if ip:
-                      print(f"Resolved {domain} -> {ip}")
-                      dnsList.append((ip.ljust(16) + domain))
-                      time.sleep(0.5)
-                  else:
-                      print(f"Failed to resolve {domain}")
-              dnsList.append('# Docker Hosts End')
+              for label, domains in [("GitHub", gitHubDoMains), ("Docker", dockerDoMains)]:
+                  dnsList.append(f'\n# {label} Hosts Start')
+                  for domain in domains:
+                      try:
+                          ip = get_ip(session, domain)
+                          if ip:
+                              print(f"Resolved {domain} -> {ip}")
+                              dnsList.append(f"{ip.ljust(16)} {domain}")
+                          time.sleep(1)
+                      except:
+                          print(f"Failed to resolve {domain}")
+                  dnsList.append(f'# {label} Hosts End')
 
-              dnsList.append('')
-              dnsList.append('# Varcli Hosts End')
+              dnsList.append('\n# Varcli Hosts End')
               
               with open('hosts', 'w', encoding="utf-8") as f:
-                  f.writelines('\n'.join(dnsList))
+                  f.write('\n'.join(dnsList))
 
       - name: Check and Push
         run: |
