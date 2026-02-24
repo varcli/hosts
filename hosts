@@ -1,69 +1,69 @@
 # Varcli Hosts Start
-# Update at: 2026-02-24 05:57:43
+# Update at: 2026-02-24 15:13:35
 # Strategy: Google DoH with ECS (116.228.111.118)
 
 # GitHub Hosts
 140.82.113.26        alive.github.com
 20.205.243.168       api.github.com
-140.82.113.21        api.individual.githubcopilot.com
-185.199.109.133      avatars.githubusercontent.com
-185.199.109.133      avatars0.githubusercontent.com
-185.199.110.133      avatars1.githubusercontent.com
+140.82.112.22        api.individual.githubcopilot.com
+185.199.110.133      avatars.githubusercontent.com
+185.199.111.133      avatars0.githubusercontent.com
+185.199.108.133      avatars1.githubusercontent.com
 185.199.110.133      avatars2.githubusercontent.com
 185.199.108.133      avatars3.githubusercontent.com
-185.199.111.133      avatars4.githubusercontent.com
-185.199.110.133      avatars5.githubusercontent.com
-185.199.109.133      camo.githubusercontent.com
-140.82.114.22        central.github.com
+185.199.108.133      avatars4.githubusercontent.com
+185.199.111.133      avatars5.githubusercontent.com
+185.199.108.133      camo.githubusercontent.com
+140.82.113.21        central.github.com
 185.199.111.133      cloud.githubusercontent.com
 20.205.243.165       codeload.github.com
-140.82.112.21        collector.github.com
-185.199.110.133      desktop.githubusercontent.com
-185.199.111.133      favicons.githubusercontent.com
+140.82.113.22        collector.github.com
+185.199.108.133      desktop.githubusercontent.com
+185.199.108.133      favicons.githubusercontent.com
 20.205.243.166       gist.github.com
-52.217.142.145       github-cloud.s3.amazonaws.com
-3.5.19.16            github-com.s3.amazonaws.com
-16.182.43.9          github-production-release-asset-2e65be.s3.amazonaws.com
-16.182.43.9          github-production-repository-file-5c1aeb.s3.amazonaws.com
-52.217.204.185       github-production-user-asset-6210df.s3.amazonaws.com
+16.15.192.59         github-cloud.s3.amazonaws.com
+16.182.33.97         github-com.s3.amazonaws.com
+52.217.68.20         github-production-release-asset-2e65be.s3.amazonaws.com
+52.217.124.25        github-production-repository-file-5c1aeb.s3.amazonaws.com
+52.217.68.20         github-production-user-asset-6210df.s3.amazonaws.com
 192.0.66.2           github.blog
 20.205.243.166       github.com
-140.82.113.17        github.community
+140.82.114.18        github.community
 185.199.109.154      github.githubassets.com
 151.101.129.194      github.global.ssl.fastly.net
-185.199.108.153      github.io
-185.199.110.133      github.map.fastly.net
+185.199.111.153      github.io
+185.199.109.133      github.map.fastly.net
 185.199.110.153      githubstatus.com
-140.82.112.26        live.github.com
-185.199.110.133      media.githubusercontent.com
+140.82.114.25        live.github.com
+185.199.111.133      media.githubusercontent.com
 185.199.108.133      objects.githubusercontent.com
 13.107.42.16         pipelines.actions.githubusercontent.com
-185.199.110.133      raw.githubusercontent.com
-185.199.108.133      user-images.githubusercontent.com
-13.107.246.51        vscode.dev
-140.82.114.22        education.github.com
-185.199.110.133      private-user-images.githubusercontent.com
+185.199.111.133      raw.githubusercontent.com
+185.199.110.133      user-images.githubusercontent.com
+13.107.213.69        vscode.dev
+140.82.114.21        education.github.com
+185.199.109.133      private-user-images.githubusercontent.com
 
 # Docker Hosts
-104.18.43.187        hub.docker.com
+172.64.144.69        hub.docker.com
 20.205.243.164       ghcr.io
 172.253.117.82       gcr.io
 173.194.202.82       k8s.gcr.io
-52.55.27.184         quay.io
+18.210.86.189        quay.io
 
 # Other Hosts
 180.163.150.33       dl.google.com
 74.125.20.93         dl-ssl.google.com
-142.250.73.106       ajax.googleapis.com
+142.251.45.138       ajax.googleapis.com
 180.163.150.161      fonts.googleapis.com
 180.163.151.162      fonts.gstatic.com
 142.251.45.138       translate.googleapis.com
 104.17.24.14         cdnjs.cloudflare.com
-151.101.1.229        cdn.jsdelivr.net
-104.18.1.22          unpkg.com
-151.101.64.223       pypi.org
+151.101.65.229       cdn.jsdelivr.net
+104.18.0.22          unpkg.com
+151.101.0.223        pypi.org
 151.101.128.223      files.pythonhosted.org
-192.0.80.240         gravatar.com
+192.0.80.239         gravatar.com
 192.0.73.2           secure.gravatar.com
 
 # Varcli Hosts End
